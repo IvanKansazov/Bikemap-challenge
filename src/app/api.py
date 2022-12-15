@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+import os
+from dotenv import load_dotenv, find_dotenv
 from http import HTTPStatus
 
 from starlette.applications import Starlette
@@ -11,12 +12,15 @@ from apischema.validator import validate_todo_entry
 from entities import TodoEntry
 from persistence.mapper.memory import MemoryTodoEntryMapper
 from persistence.repository import TodoEntryRepository
+from persistence.db import DB
 
 from usecases import get_todo_entry, create_todo_entry, set_todo_label, UseCaseError, NotFoundError
 
-_MAPPER_IN_MEMORY_STORAGE = {
-    1: TodoEntry(id=1, summary="Lorem Ipsum", created_at=datetime.now(tz=timezone.utc))
-}
+load_dotenv(find_dotenv())
+db_connection = DB(host=os.environ.get('DB_HOST'),
+                   user=os.environ.get('DB_USER'),
+                   pwd=os.environ.get('DB_PWD'),
+                   db=os.environ.get('DB_NAME'))
 
 
 async def get_todo(request: Request) -> Response:
@@ -41,7 +45,7 @@ async def get_todo(request: Request) -> Response:
     try:
         identifier = request.path_params["id"]  # TODO: add validation
 
-        mapper = MemoryTodoEntryMapper(storage=_MAPPER_IN_MEMORY_STORAGE)
+        mapper = MemoryTodoEntryMapper(storage=db_connection)
         repository = TodoEntryRepository(mapper=mapper)
 
         entity = await get_todo_entry(identifier=identifier, repository=repository)
@@ -79,7 +83,7 @@ async def create_new_todo_entry(request: Request) -> Response:
             media_type="application/json",
         )
 
-    mapper = MemoryTodoEntryMapper(storage=_MAPPER_IN_MEMORY_STORAGE)
+    mapper = MemoryTodoEntryMapper(storage=db_connection)
     repository = TodoEntryRepository(mapper=mapper)
 
     try:
@@ -103,7 +107,7 @@ async def set_new_todo_label(request: Request) -> Response:
         identifier = request.path_params["id"]
         label = request.path_params["label"]
 
-        mapper = MemoryTodoEntryMapper(storage=_MAPPER_IN_MEMORY_STORAGE)
+        mapper = MemoryTodoEntryMapper(storage=db_connection)
         repository = TodoEntryRepository(mapper=mapper)
 
         entity = await set_todo_label(identifier=identifier, label=label, repository=repository)
@@ -118,6 +122,7 @@ async def set_new_todo_label(request: Request) -> Response:
     return Response(
         content=content, status_code=HTTPStatus.CREATED, media_type="application/json"
     )
+
 
 app = Starlette(
     debug=True,
