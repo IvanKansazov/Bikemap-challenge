@@ -29,11 +29,10 @@ class MemoryTodoEntryMapper(TodoEntryMapperInterface):
 
     async def update(self, identifier: int, label: str) -> TodoEntry:
         try:
-            entity = self._storage[identifier]
-            entity.label = label
-            entity.updated_at = datetime.now(tz=timezone.utc)
-            return entity
-        except TypeError as error:
+            query = "UPDATE todos SET label=%s, updated_at=UTC_TIMESTAMP WHERE id=%s"
+            self._storage.cursor.execute(query, (label, identifier))
+            return self._get_row(identifier)
+        except (TypeError, KeyError) as error:
             raise CreateMapperError(error)
 
     def _generate_unique_id(self) -> int:
