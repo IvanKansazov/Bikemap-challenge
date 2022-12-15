@@ -21,9 +21,11 @@ class MemoryTodoEntryMapper(TodoEntryMapperInterface):
 
     async def create(self, entity: TodoEntry) -> TodoEntry:
         try:
-            entity.id = self._generate_unique_id()
-            self._storage[entity.id] = entity
-            return entity
+            query = "INSERT INTO todos(summary, detail, label, created_at) " \
+                    "VALUES(%s, %s, %s, UTC_TIMESTAMP)"
+            self._storage.cursor.execute(query, (entity.summary, entity.detail, entity.label))
+            todo_id = self._storage.cursor.lastrowid
+            return self._get_row(todo_id)
         except TypeError as error:
             raise CreateMapperError(error)
 
