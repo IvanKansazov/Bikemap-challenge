@@ -12,7 +12,7 @@ from entities import TodoEntry
 from persistence.mapper.memory import MemoryTodoEntryMapper
 from persistence.repository import TodoEntryRepository
 
-from usecases import get_todo_entry, create_todo_entry, UseCaseError, NotFoundError
+from usecases import get_todo_entry, create_todo_entry, set_todo_label, UseCaseError, NotFoundError
 
 _MAPPER_IN_MEMORY_STORAGE = {
     1: TodoEntry(id=1, summary="Lorem Ipsum", created_at=datetime.now(tz=timezone.utc))
@@ -98,10 +98,32 @@ async def create_new_todo_entry(request: Request) -> Response:
     )
 
 
+async def set_new_todo_label(request: Request) -> Response:
+    try:
+        identifier = request.path_params["id"]
+        label = request.path_params["label"]
+
+        mapper = MemoryTodoEntryMapper(storage=_MAPPER_IN_MEMORY_STORAGE)
+        repository = TodoEntryRepository(mapper=mapper)
+
+        entity = await set_todo_label(identifier=identifier, label=label, repository=repository)
+        content = encode_to_json_response(entity=entity)
+
+    except NotFoundError:
+        return Response(
+            content=None,
+            status_code=HTTPStatus.NOT_FOUND,
+            media_type="application/json",
+        )
+    return Response(
+        content=content, status_code=HTTPStatus.CREATED, media_type="application/json"
+    )
+
 app = Starlette(
     debug=True,
     routes=[
         Route("/todo/", create_new_todo_entry, methods=["POST"]),
         Route("/todo/{id:int}/", get_todo, methods=["GET"]),
+        Route("/todo/{label:str}/{id:int}", set_new_todo_label, methods=["PUT"])
     ],
 )

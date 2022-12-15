@@ -21,3 +21,10 @@ class TodoEntryRepository:
             return await self._mapper.create(entity=entity)
         except CreateMapperError as error:
             raise CreateError(error)
+
+    async def update(self, identifier: int, label: str) -> TodoEntry:
+        try:
+            return await self._mapper.update(identifier=identifier, label=label)
+        except CreateMapperError as error:
+            raise CreateError(error)
+
