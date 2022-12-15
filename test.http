@@ -58,3 +58,23 @@ Content-Type: application/json
     });
 %}
 ###
+
+## PUT Create label for todo
+PUT http://{{host}}:{{port}}/todo/TestLabel/1
+
+> {%
+    client.test("New label", function() {
+        client.assert(response.status === 201);
+        client.assert(response.body.hasOwnProperty("label"));
+        client.assert(response.body.hasOwnProperty("updated_at"));
+
+    });
+%}
+###
+POST http://{{host}}:{{port}}/todo/label1/1/
+
+> {%
+    client.test("Method Not Allowed", function() {
+        client.assert(response.status === 405);
+    });
+%}
