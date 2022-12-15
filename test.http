@@ -26,7 +26,7 @@ Content-Type: application/json
 
 {
   "summary": "Lorem Ipsum",
-  "detail": null,
+  "detail": "null",
   "created_at": "2022-09-05T18:07:19.280040+00:00"
 }
 
@@ -60,7 +60,7 @@ Content-Type: application/json
 ###
 
 ## PUT Create label for todo
-PUT http://{{host}}:{{port}}/todo/TestLabel/1
+PUT http://{{host}}:{{port}}/todo/TestLabel2/1
 
 > {%
     client.test("New label", function() {
