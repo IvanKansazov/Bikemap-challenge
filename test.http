@@ -71,10 +71,28 @@ PUT http://{{host}}:{{port}}/todo/TestLabel2/1
     });
 %}
 ###
+## POST label test
 POST http://{{host}}:{{port}}/todo/label1/1/
 
 > {%
     client.test("Method Not Allowed", function() {
         client.assert(response.status === 405);
+    });
+%}
+###
+## New todo with label
+POST http://{{host}}:{{port}}/todo/
+Content-Type: application/json
+
+{
+  "summary": "Testing the label",
+  "detail": "null",
+  "label": "This is test label",
+  "created_at": "2022-09-05T18:07:19.280040+00:00"
+}
+
+> {%
+    client.test("Validation error", function() {
+        client.assert(response.status === 201);
     });
 %}
