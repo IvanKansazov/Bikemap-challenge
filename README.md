@@ -31,6 +31,16 @@ Project is fully functional, compatible with Python 3.8 or newer versions. By us
 ```shell
 pip install -r requirements.txt
 ```
+### Setup Database
+1) Populate .env environments
+```shell
+cp .env.example .env
+```
+2) Populate database schema
+```shell
+mysql -u root -p bikemap < app/.docs/bikemap.schema.sql
+```
+
 
 ### Run HTTP server
 ```shell
