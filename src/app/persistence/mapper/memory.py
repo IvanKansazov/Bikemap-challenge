@@ -1,5 +1,4 @@
 from random import randint
-from datetime import datetime, timezone
 
 from entities import TodoEntry
 from persistence.mapper.errors import EntityNotFoundMapperError, CreateMapperError
@@ -26,7 +25,7 @@ class MemoryTodoEntryMapper(TodoEntryMapperInterface):
             self._storage.cursor.execute(query, (entity.summary, entity.detail, entity.label))
             todo_id = self._storage.cursor.lastrowid
             return self._get_row(todo_id)
-        except TypeError as error:
+        except (TypeError, KeyError) as error:
             raise CreateMapperError(error)
 
     async def update(self, identifier: int, label: str) -> TodoEntry:

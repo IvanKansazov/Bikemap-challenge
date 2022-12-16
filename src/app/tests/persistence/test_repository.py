@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
+from unittest import mock
 
 from entities import TodoEntry
 from persistence.errors import EntityNotFoundError, CreateError
@@ -11,30 +12,40 @@ _memory_storage = {
     1: TodoEntry(id=1, summary="Lorem Ipsum", created_at=datetime.now(tz=timezone.utc))
 }
 
+mock_storage = mock.MagicMock()
+mock_cursor = mock.MagicMock()
+mock_storage.cursor = mock_cursor
+
 
 @pytest.mark.asyncio
 async def test_get_todo_entry() -> None:
-    mapper = MemoryTodoEntryMapper(storage=_memory_storage)
+    mapper = MemoryTodoEntryMapper(storage=mock_storage)
     repository = TodoEntryRepository(mapper=mapper)
-
+    mock_storage.cursor.fetchone.return_value = TodoEntry(id=1, summary="Lorem Ipsum",
+                                                          created_at=datetime.now(tz=timezone.utc))
     entity = await repository.get(identifier=1)
     assert isinstance(entity, TodoEntry)
 
 
 @pytest.mark.asyncio
 async def test_todo_entry_not_found_error() -> None:
-    mapper = MemoryTodoEntryMapper(storage=_memory_storage)
+    mapper = MemoryTodoEntryMapper(storage=mock_storage)
     repository = TodoEntryRepository(mapper=mapper)
-
+    mock_storage.cursor.fetchone.return_value = None
     with pytest.raises(EntityNotFoundError):
         await repository.get(identifier=42)
 
 
 @pytest.mark.asyncio
 async def test_save_todo_entry() -> None:
-    mapper = MemoryTodoEntryMapper(storage=_memory_storage)
+    mapper = MemoryTodoEntryMapper(storage=mock_storage)
     repository = TodoEntryRepository(mapper=mapper)
 
+    mock_storage.cursor.lastrowid.return_value = 5
+    mock_storage.cursor.fetchone.return_value = TodoEntry(id=5,
+                                                          summary="Buy flowers to my wife",
+                                                          detail="We have marriage anniversary",
+                                                          created_at=datetime.now(tz=timezone.utc))
     data = TodoEntry(
         summary="Buy flowers to my wife",
         detail="We have marriage anniversary",
@@ -48,9 +59,10 @@ async def test_save_todo_entry() -> None:
 
 @pytest.mark.asyncio
 async def test_todo_entry_create_error() -> None:
-    mapper = MemoryTodoEntryMapper(storage=None)
+    mapper = MemoryTodoEntryMapper(storage=mock_storage)
     repository = TodoEntryRepository(mapper=mapper)
-
+    mock_storage.cursor.lastrowid.return_value = 5
+    mock_storage.cursor.fetchone.return_value = None
     data = TodoEntry(
         summary="Lorem Ipsum",
         detail=None,
